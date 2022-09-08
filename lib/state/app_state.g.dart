@@ -49,22 +49,6 @@ mixin _$AppState on _AppState, Store {
     });
   }
 
-  late final _$currentUserAtom =
-      Atom(name: '_AppState.currentUser', context: context);
-
-  @override
-  User? get currentUser {
-    _$currentUserAtom.reportRead();
-    return super.currentUser;
-  }
-
-  @override
-  set currentUser(User? value) {
-    _$currentUserAtom.reportWrite(value, super.currentUser, () {
-      super.currentUser = value;
-    });
-  }
-
   late final _$authErrorAtom =
       Atom(name: '_AppState.authError', context: context);
 
@@ -95,6 +79,34 @@ mixin _$AppState on _AppState, Store {
     _$remindersAtom.reportWrite(value, super.reminders, () {
       super.reminders = value;
     });
+  }
+
+  late final _$initializeAsyncAction =
+      AsyncAction('_AppState.initialize', context: context);
+
+  @override
+  Future<void> initialize() {
+    return _$initializeAsyncAction.run(() => super.initialize());
+  }
+
+  late final _$_loadRemindersAsyncAction =
+      AsyncAction('_AppState._loadReminders', context: context);
+
+  @override
+  Future<bool> _loadReminders() {
+    return _$_loadRemindersAsyncAction.run(() => super._loadReminders());
+  }
+
+  late final _$_registerOrLoginAsyncAction =
+      AsyncAction('_AppState._registerOrLogin', context: context);
+
+  @override
+  Future<bool> _registerOrLogin(
+      {required LoginOrRegisterFunction fn,
+      required String email,
+      required String password}) {
+    return _$_registerOrLoginAsyncAction.run(
+        () => super._registerOrLogin(fn: fn, email: email, password: password));
   }
 
   late final _$deleteAsyncAction =
@@ -129,17 +141,40 @@ mixin _$AppState on _AppState, Store {
     return _$createReminderAsyncAction.run(() => super.createReminder(text));
   }
 
-  late final _$modifyAsyncAction =
-      AsyncAction('_AppState.modify', context: context);
+  late final _$modifyReminderAsyncAction =
+      AsyncAction('_AppState.modifyReminder', context: context);
 
   @override
-  Future<bool> modify(Reminder reminder, {required bool isDone}) {
-    return _$modifyAsyncAction
-        .run(() => super.modify(reminder, isDone: isDone));
+  Future<bool> modifyReminder(
+      {required String reminderId, required bool isDone}) {
+    return _$modifyReminderAsyncAction.run(
+        () => super.modifyReminder(reminderId: reminderId, isDone: isDone));
   }
 
   late final _$_AppStateActionController =
       ActionController(name: '_AppState', context: context);
+
+  @override
+  Future<bool> register({required String email, required String password}) {
+    final _$actionInfo =
+        _$_AppStateActionController.startAction(name: '_AppState.register');
+    try {
+      return super.register(email: email, password: password);
+    } finally {
+      _$_AppStateActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
+  Future<bool> login({required String email, required String password}) {
+    final _$actionInfo =
+        _$_AppStateActionController.startAction(name: '_AppState.login');
+    try {
+      return super.login(email: email, password: password);
+    } finally {
+      _$_AppStateActionController.endAction(_$actionInfo);
+    }
+  }
 
   @override
   void goTo(AppScreen screen) {
@@ -157,7 +192,6 @@ mixin _$AppState on _AppState, Store {
     return '''
 currentScreen: ${currentScreen},
 isLoading: ${isLoading},
-currentUser: ${currentUser},
 authError: ${authError},
 reminders: ${reminders},
 sortedReminders: ${sortedReminders}
