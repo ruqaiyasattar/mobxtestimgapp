@@ -4,8 +4,9 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:mobx/mobx.dart';
 import 'package:mobxtestingdemo/dialog/show_auth_error.dart';
 import 'package:mobxtestingdemo/loading/loading_screen.dart';
-import 'package:mobxtestingdemo/provider/auth_provider.dart';
-import 'package:mobxtestingdemo/provider/reminders_provider.dart';
+import 'package:mobxtestingdemo/services/auth_service.dart';
+import 'package:mobxtestingdemo/services/image_upload_service.dart';
+import 'package:mobxtestingdemo/services/reminders_service.dart';
 import 'package:mobxtestingdemo/state/app_state.dart';
 import 'package:mobxtestingdemo/views/login_view.dart';
 import 'package:mobxtestingdemo/views/registers_view.dart';
@@ -22,8 +23,9 @@ void main() async {
   runApp(
     Provider(
         create: (_) => AppState(
-          reminderProvider: FirestoreRemindersProvider(),
-          authProvider: FirebaseAuthProvider(),
+          reminderService: FirestoreRemindersService(),
+          authService: FirebaseAuthService(),
+          imageUploadService: FirebaseImageUploadService(),
         )..initialize(),
         child: const App(),
     ),

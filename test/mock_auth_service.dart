@@ -1,7 +1,8 @@
-import 'package:mobxtestingdemo/provider/auth_provider.dart';
+import 'package:mobxtestingdemo/services/auth_service.dart';
 import 'utils.dart';
 
-class MockAuthProvider implements AuthProvider{
+class MockAuthService implements AuthService{
+
   @override
   Future<bool> deleteAccountSignOut() => true.toFuture(oneSecond);
 
