@@ -1,8 +1,12 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:mobx/mobx.dart';
 import 'package:mobxtestingdemo/auth/auth_error.dart';
 import 'package:mobxtestingdemo/provider/auth_provider.dart';
 import 'package:mobxtestingdemo/provider/reminders_provider.dart';
 import 'package:mobxtestingdemo/state/reminder.dart';
+import 'package:mobxtestingdemo/utils/upload_image.dart';
 part 'app_state.g.dart';
 
 class AppState = _AppState with _$AppState;
@@ -28,7 +32,6 @@ abstract class _AppState with Store {
 
   @observable
   ObservableList<Reminder> reminders = ObservableList<Reminder>();
-
 
   @computed
   ObservableList<Reminder> get sortedReminders =>
@@ -203,6 +206,7 @@ abstract class _AppState with Store {
       id: cloudReminderId,
       isDone: false,
       text: text,
+      hasImage: false,
     );
     reminders.add(reminder);
     isLoading = false;
@@ -210,8 +214,8 @@ abstract class _AppState with Store {
   }
 
   @action
-  Future<bool> modifyReminder(
-      { required ReminderId reminderId,
+  Future<bool> modifyReminder({
+    required ReminderId reminderId,
     required bool isDone,
   }) async {
    final userId = authProvider.userId;
@@ -229,6 +233,64 @@ abstract class _AppState with Store {
     )
         .isDone = isDone;
    return true;
+  }
+
+  @action
+  Future<bool> upload({
+    required String filePath,
+    required ReminderId forReminderId,
+  }) async {
+    final userId = authProvider.userId;
+    if (userId == null) {
+      return false;
+    }
+    //set reminder as loading by uploading the img
+    final reminder = reminders.firstWhere(
+          (element) => element.id == forReminderId,
+    );
+    reminder.isLoading = true;
+
+    final file = File(filePath);
+    final imageId = await uploadImage(
+        file: file,
+        userId: userId,
+        imageId: forReminderId,
+    );
+
+    if (imageId == null) {
+      reminder.isLoading = false;
+      return false;
+    }
+    await reminderProvider.setReminderHasImage(
+        reminderId: forReminderId,
+        userId: userId,
+    );
+    reminder.isLoading = false;
+    reminder.hasImage = true;
+    return true;
+  }
+
+
+  Future<Uint8List?> getReminderImage({
+  required ReminderId reminderId
+  }) async {
+    final userId = authProvider.userId;
+    if (userId == null) {
+      return null;
+    }
+    final reminder = reminders.firstWhere(
+          (element) => element.id == reminderId,
+    );
+    final existingImageData = reminder.imageData;
+    if (existingImageData != null) {
+      return existingImageData;
+    }
+    final image = await reminderProvider.getReminderImage(
+        userId: userId,
+        reminderId: reminderId,
+    );
+    reminder.imageData = image;
+    return image;
   }
 }
 
